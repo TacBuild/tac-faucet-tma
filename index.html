@@ -15,6 +15,16 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
     />
+    <script type="module">
+      import { Buffer } from "buffer";
+      import process from "process";
+      import util from "util";
+      window.global = window;
+      window.Buffer = Buffer;
+      window.process = process;
+      window.util = util;
+    </script>
+    <script type="module"></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

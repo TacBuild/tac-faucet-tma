@@ -1,9 +1,10 @@
 {
   "name": "tac-faucet",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.5",
+  "description": "Telegram MiniApp that act as a frontend for the tac-faucet-contracts used to implement an ERC20/Jetton Faucet for TAC Turin testnet",
   "type": "module",
-  "homepage": "https://docs.tac.build",
+  "homepage": "https://tac.build",
   "scripts": {
     "deploy": "gh-pages -d dist",
     "dev": "vite",
@@ -21,6 +22,7 @@
     "@mui/icons-material": "^6.2.0",
     "@mui/material": "^6.2.0",
     "@mui/styled-engine-sc": "^6.2.0",
+    "@rollup/plugin-inject": "^5.0.5",
     "@telegram-apps/sdk-react": "^2.0.10",
     "@telegram-apps/telegram-ui": "^2.1.5",
     "@ton/core": "^0.59.0",
