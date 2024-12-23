@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTonWallet, useTonAddress } from "@tonconnect/ui-react";
 import { TonClient } from '@ton/ton';
-import { AssetBridgingData, EvmProxyMsg, Network, SenderFactory, TacSdk, TacSDKTonClientParams } from "tac-sdk";
+import { AssetBridgingData, EvmProxyMsg, Network, SenderFactory, TacSdk, TacSDKTonClientParams, startTracking } from "tac-sdk";
 
 import { ethers } from "ethers";
 import { fromNano, toNano } from "@ton/ton";
@@ -115,11 +115,12 @@ const getAllJettonsBalance = async (userAddress: Address) => {
 // @dev
 // * Helper function to trigger the drip of new tokens
 // *
-const drip = async (wallet, tonAmount, erc20ProxyApp) => {
+const drip = async (tonConnectUI, tonAmount, erc20ProxyApp) => {
 
   try {
     const tacSdk = new TacSdk({
       network: Network.Testnet,
+      delay: 0
     });
 
     await tacSdk.init();
@@ -136,7 +137,7 @@ const drip = async (wallet, tonAmount, erc20ProxyApp) => {
       ["address", "uint256"],
       [
         evmWalletAddress,
-        Number(toNano(tonAmount))
+        Number(tonAmount)
       ]
     );
 
@@ -147,16 +148,22 @@ const drip = async (wallet, tonAmount, erc20ProxyApp) => {
       encodedParameters,
     };
 
-    const sender = new TonConnectSender(wallet);
+    const sender = await SenderFactory.getSender({
+        tonConnect: tonConnectUI,
+      });
 
     // we are sending NATIVE TON, no need to specify a jetton address
     const assets: AssetBridgingData[] = [{
-        amount: tonAmount
+        amount: Number(tonAmount)
     }]
 
-    const transactionLinker = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
+    const result = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
 
-    return transactionLinker;
+    console.log('Transaction sent:', result);
+
+    await startTracking(result);
+
+    return result;
 
   } catch (e) {
     console.log(e);
@@ -167,7 +174,7 @@ const drip = async (wallet, tonAmount, erc20ProxyApp) => {
 // @dev
 // * Helper function to trigger the drip of new tokens
 // *
-const refund = async (wallet, tokenAmount, erc20ProxyApp, jettonMaster) => {
+const refund = async (tonConnectUI, tokenAmount, erc20ProxyApp, jettonMaster) => {
 
   try {
     const tacSdk = new TacSdk({
@@ -191,7 +198,9 @@ const refund = async (wallet, tokenAmount, erc20ProxyApp, jettonMaster) => {
       encodedParameters,
     };
 
-    const sender = new TonConnectSender(wallet);
+    const sender = await SenderFactory.getSender({
+        tonConnect: tonConnectUI,
+      });
 
     // create JettonTransferData (transfer jetton in TVM to swap)
     const assets: AssetBridgingData[] = []
@@ -200,9 +209,13 @@ const refund = async (wallet, tokenAmount, erc20ProxyApp, jettonMaster) => {
       amount: tokenAmount
     });
 
-    const transactionLinker = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
+    const result = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
 
-    return transactionLinker;
+    console.log('Transaction sent:', result);
+
+    await startTracking(result);
+
+    return result;
 
   } catch (e) {
     console.log(e);

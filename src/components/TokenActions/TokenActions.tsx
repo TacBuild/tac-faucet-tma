@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AppBar, Box, TextField, Toolbar, IconButton, Typography, Button, Container, Grid, Card, CardContent, CardActions, Switch } from '@mui/material';
 import { type FC, type MouseEventHandler, useCallback } from 'react';
 
-import { useTonWallet, useTonAddress } from '@tonconnect/ui-react';
+import { useTonWallet, useTonAddress, useTonConnectUI} from '@tonconnect/ui-react';
 import { getSigleJettonBalance, drip, refund } from '../../helpers/walletops.tsx';
 
 import { data } from '../../helpers/config.tsx';
@@ -86,6 +86,7 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, tokenIndex}) =>
 
   const wallet = useTonWallet();
   const userAddress = useTonAddress();
+  const [tonConnectUI, setOptions] = useTonConnectUI();
 
   useEffect(() => {
 
@@ -147,14 +148,14 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, tokenIndex}) =>
   const executeDrip = async (erc20ProxyApp) => {
     if(!wallet || !dripAmount || dripAmount === "")
       return console.log("Wallet not ready or no amount specified");
-    const results = await drip(wallet, dripAmount, erc20ProxyApp);
+    const results = await drip(tonConnectUI, dripAmount, erc20ProxyApp);
     setTxLinker(results);
   }
 
   const executeRefund = async (erc20ProxyApp, jettonMaster) => {
     if(!wallet || !refundAmount || refundAmount === "")
       return console.log("Wallet not ready or no amount specified");
-    const results = await refund(wallet, refundAmount, erc20ProxyApp, jettonMaster);
+    const results = await refund(tonConnectUI, refundAmount, erc20ProxyApp, jettonMaster);
     setTxLinker(results);
   }
 
