@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTonWallet, useTonAddress } from "@tonconnect/ui-react";
 import { TonClient } from '@ton/ton';
-import { AssetBridgingData, EvmProxyMsg, Network, SenderFactory, TacSdk, TacSDKTonClientParams, startTracking } from "tac-sdk";
+import { AssetBridgingData, EvmProxyMsg, Network, SenderFactory, TacSdk, TacSDKTonClientParams, TransactionStatus } from "tac-sdk";
 
 import { ethers } from "ethers";
 import { fromNano, toNano } from "@ton/ton";
@@ -115,8 +115,7 @@ const getAllJettonsBalance = async (userAddress: Address) => {
 // @dev
 // * Helper function to trigger the drip of new tokens
 // *
-const drip = async (tonConnectUI, tonAmount, erc20ProxyApp) => {
-
+const drip = async (tonConnectUI, tonAmount, erc20ProxyApp, setCclMessage, setIsCCLDone, setStage) => {
   try {
     const tacSdk = new TacSdk({
       network: Network.Testnet,
@@ -124,6 +123,10 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp) => {
     });
 
     await tacSdk.init();
+
+    setStage(10);
+
+    setCclMessage("Opening Wallet");
 
     //User's EVM Wallet Address is abstracted away from the Proxy Contract itself that act as a user wallet in its internal logic (the "to" param in the mint() method)
     const evmWalletAddress = erc20ProxyApp;
@@ -137,7 +140,7 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp) => {
       ["address", "uint256"],
       [
         evmWalletAddress,
-        Number(tonAmount)
+        Number(toNano(tonAmount))
       ]
     );
 
@@ -157,16 +160,16 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp) => {
         amount: Number(tonAmount)
     }]
 
-    const result = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
+    const txLinker = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
 
-    console.log('Transaction sent:', result);
+    setStage(20);
 
-    await startTracking(result);
-
-    return result;
+    const result = await pollStatus(txLinker, 200, 2, setCclMessage, setIsCCLDone, setStage);
 
   } catch (e) {
-    console.log(e);
+    console.log("TX failed with err: "+e);
+    setCclMessage("TX failed with err: "+e);
+    setIsCCLDone(true);
   }
 
 }
@@ -174,21 +177,26 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp) => {
 // @dev
 // * Helper function to trigger the drip of new tokens
 // *
-const refund = async (tonConnectUI, tokenAmount, erc20ProxyApp, jettonMaster) => {
+const refund = async (tonConnectUI, tokenAmount, tokenDecimals, erc20ProxyApp, jettonMaster, setCclMessage, setIsCCLDone, setStage) => {
 
   try {
     const tacSdk = new TacSdk({
       network: Network.Testnet,
+      delay: 0
     });
 
     await tacSdk.init();
+
+    setStage(10);
+
+    setCclMessage("Opening Wallet");
 
     // create evm proxy msg
     const abi = new ethers.AbiCoder();
     const encodedParameters = abi.encode(
       ["uint256"],
       [
-        Number(toNano(tokenAmount))
+        Number(tokenAmount) * 10 ** tokenDecimals
       ]
     );
 
@@ -206,21 +214,91 @@ const refund = async (tonConnectUI, tokenAmount, erc20ProxyApp, jettonMaster) =>
     const assets: AssetBridgingData[] = []
     assets.push({
       address: jettonMaster,
-      amount: tokenAmount
+      amount: Number(tokenAmount)
     });
 
-    const result = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
+    const txLinker = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
 
-    console.log('Transaction sent:', result);
+    setStage(20);
 
-    await startTracking(result);
-
-    return result;
+    const result = await pollStatus(txLinker, 200, 2, setCclMessage, setIsCCLDone, setStage);
 
   } catch (e) {
-    console.log(e);
+    console.log("TX failed with err: "+e);
+    setCclMessage("TX Failed! "+e);
+    setIsCCLDone(true);
   }
 
+}
+
+async function pollStatus(txLinker, maxAttempts = 200, delay = 5, setCclMessage, setIsCCLDone, setStage) {
+  const tracker = new TransactionStatus();
+  let attempts = 0;
+  let operationId = ""
+  let currentStage = 20;
+
+  const updateStage = (newStage) => {
+    if (newStage > currentStage) {
+      currentStage = newStage;
+      setStage(currentStage);
+    }
+  }
+
+  const poll = async () => {
+    if (attempts >= maxAttempts) {
+      setIsCCLDone(true);
+      throw new Error("TX took more than expected, check execution on TAC Explorer");
+    }
+
+    if (operationId === "") {
+      operationId = await tracker.getOperationId(txLinker);
+      setCclMessage("Waiting for TAC OperationId");
+    } else {
+      updateStage(30);
+      const status = await tracker.getStatusTransaction(operationId);
+      switch (status) {
+        case "EVMMerkleMessageCollected":
+          //All events collected for sharded message
+          updateStage(40);
+          setCclMessage("TX Collected by the TAC Adapter...");
+          break;
+        case "EVMMerkleRootSet":
+          //Message added to Merkle tree
+          updateStage(60);
+          setCclMessage("TX Executed by TAC Adapter, waiting for the finalization...");
+          break;
+        case "EVMMerkleMessageExecuted":
+          //Executed on EVM side
+          updateStage(70);
+          setCclMessage("TX finalized on TAC, going back to TON...");
+          break;
+        case "TVMMerkleMessageCollected":
+          //Return message generated
+          updateStage(80);
+          setCclMessage("TX Collected by the TAC adapter...");
+          break;
+        case "TVMMerkleRootSet":
+          //TVM message added to tree
+          setCclMessage("TX scheduled on TON, you will see the updated balance on your wallet in a few seconds...");
+          updateStage(100);
+          setIsCCLDone(true);
+          return true;
+          break;
+        case "TVMMerkleMessageExecuted":
+          //Executed on TVM side
+          //We skip this step as the time is
+          break;
+        default:
+          break;
+      }
+    }
+
+    attempts++;
+    await new Promise((resolve) => setTimeout(resolve, delay * 1000)); // custom or 5 second (default) delay
+    return poll();
+  };
+
+  return poll();
 }
 
 const JSsleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))

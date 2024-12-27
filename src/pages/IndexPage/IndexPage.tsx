@@ -29,12 +29,12 @@ export const IndexPage: FC = () => {
   const wallet = useTonWallet();
   const userAddress = useTonAddress();
 
-  useEffect(() => {
+  const updateBalance = async () => {
+    let balance = await getTONBalance(userAddress);
+    setTonBalance(balance);
+  }
 
-    const updateBalance = async () => {
-      let balance = await getTONBalance(userAddress);
-      setTonBalance(balance);
-    }
+  useEffect(() => {
 
     if (userAddress) {
       updateBalance()
@@ -116,7 +116,7 @@ export const IndexPage: FC = () => {
               :
                 //Check if the wallet is connected to TON Testnet:
                 wallet.account.chain === CHAIN.TESTNET ?
-                <Tokens tonBalance={tonBalance} />
+                <Tokens tonBalance={tonBalance} updateBalance={updateBalance}/>
                 :
                 //Not connected to Testnet, block user to prevent loss of funds
                 <Grid item xs={12} sm={6}>

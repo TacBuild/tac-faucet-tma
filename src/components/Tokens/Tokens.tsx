@@ -6,7 +6,7 @@ import { Link } from '@/components/Link/Link.tsx';
 import { data } from '../../helpers/config.tsx';
 import { TokenActions } from '@/components/TokenActions/TokenActions.tsx';
 
-export const Tokens: FC<TokensProps> = ({tonBalance}) => {
+export const Tokens: FC<TokensProps> = ({tonBalance, updateBalance}) => {
 
   const [tokenIndex, setTokenIndex] = useState(null);
 
@@ -40,7 +40,7 @@ export const Tokens: FC<TokensProps> = ({tonBalance}) => {
             </CardContent>
             <CardActions>
               {tokenIndex == index ?
-              <TokenActions tonBalance={tonBalance} tokenIndex={tokenIndex} />
+              <TokenActions tonBalance={tonBalance} updateBalance={updateBalance} tokenIndex={tokenIndex} />
               :
               <Button size="small" variant="contained" color="primary" onClick={() => setTokenIndex(index)}>
                 Select
