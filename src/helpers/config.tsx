@@ -153,8 +153,8 @@ export const data =
         "tokenName": "DOGS",
         "tokenAddress": "0x5B37a43f79FBEeD56d7dEEd5fFBA45c94Bcce7ed",
         "jettonMaster": "EQB83QSgWsHfSWYzDwKG68vygwXACiJyK_U8gsBhjqmRzHzB",
-        "erc20ProxyApp": "0xa0FF0a1B6CfB922531aC0BC86C223D806EddAa07",
-        "tokenValue": "8530",
+        "erc20ProxyApp": "0x554Bd6d3c973431AD2FB556EC91DA030859DE309",
+        "tokenValue": "8530000000000",
         "upperBound": "10000000000000000",
         "lowerBound": "500000000",
         "decimals": 9
@@ -201,8 +201,8 @@ export const data =
         "tokenName": "CATI",
         "tokenAddress": "0x3A77c5566E459082f2d07dBa3c49411F52f54593",
         "jettonMaster": "EQByFxS0iXpxEDPnxBqeYYh-F4W17-EvE2CAWDqLvXtDmsDv",
-        "erc20ProxyApp": "0x5243d8F468d13755495c19aD3df6614f1881e7fD",
-        "tokenValue": "13",
+        "erc20ProxyApp": "0xd952ab5a95485b5dC6EdD39C5133959Ad9DE1d09",
+        "tokenValue": "13000000000",
         "upperBound": "10000000000000000",
         "lowerBound": "500000000",
         "decimals": 9
@@ -213,8 +213,8 @@ export const data =
         "tokenName": "stTON",
         "tokenAddress": "0x2b57898AEc43c8e9438daC7b9fa7dBD0758173D4",
         "jettonMaster": "EQBIs6eDdr-Fhsbd3sO1uj2G_GXBlKNkJdTLdk4XeDlo_URM",
-        "erc20ProxyApp": "0xB17485F7fDA07154B07f9B1FF8667A84c9402Da6",
-        "tokenValue": "1",
+        "erc20ProxyApp": "0x9621Ba7006200c3e7602aD6F99bF8D66244B7689",
+        "tokenValue": "1000000000",
         "upperBound": "10000000000000000",
         "lowerBound": "500000000",
         "decimals": 9
