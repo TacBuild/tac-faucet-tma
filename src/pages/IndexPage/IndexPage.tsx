@@ -11,6 +11,7 @@ import tonSvg from './ton.svg';
 // Import necessary libraries
 import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Box, IconButton, Typography, Button, Container, Grid, Card, CardContent, CardActions } from '@mui/material';
+import { Refresh } from '@mui/icons-material';
 import { Footer } from '@/components/Footer.tsx';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -74,6 +75,13 @@ export const IndexPage: FC = () => {
           <Toolbar className="toolbar">
           <img className="headerLogo" src={tacLogo} alt="TAC Logo" />
           <Box sx={{ flexGrow: 1 }} />
+            { wallet?.account.chain === CHAIN.TESTNET && tonBalance ?
+            <IconButton onClick={ updateBalance }>
+              <Refresh />
+            </IconButton>
+            :
+            ""
+            }
             { wallet?.account.chain === CHAIN.TESTNET && tonBalance ?
             <Typography variant="caption" sx={{marginRight: 1}}>
               {tonBalance} TON

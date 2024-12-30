@@ -170,8 +170,11 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
 
   const closeProgress = async () => {
     setIsCCLPending(false);
-    await updateBalance();
-    await updateJettonBalance();
+    //TON state is updated with a 5/10sec delay
+    setTimeout(async function() {
+      await updateBalance();
+      await updateJettonBalance();
+    }, 10000);
   }
 
   return (
