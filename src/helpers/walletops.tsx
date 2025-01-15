@@ -255,7 +255,7 @@ async function pollStatus(txLinker, maxAttempts = 200, delay = 5, setCclMessage,
       setCclMessage("Waiting for TAC OperationId");
     } else {
       updateStage(30);
-      const status = await tracker.getStatusTransaction(operationId);
+      const status = await tracker.getStatusTransaction(operationId).catch(() => '');
       switch (status) {
         case "EVMMerkleMessageCollected":
           //All events collected for sharded message
