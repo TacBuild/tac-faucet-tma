@@ -30,10 +30,10 @@ export const Tokens: FC<TokensProps> = ({tonBalance, updateBalance}) => {
                     {card.title}
                   </Typography>
                   <Typography variant="body2" gutterBottom>
-                    TON Jetton: <Link to="https://testnet.tonviewer.com/`{card.jettonMaster}`" style={{ margin: '0 8px', color: '#91029b' }}>Tonviewer</Link>
+                    TON Jetton: <Link to={`https://testnet.tonviewer.com/${card.jettonMaster}`} style={{ margin: '0 8px', color: '#91029b' }}>Tonviewer</Link>
                   </Typography>
                   <Typography variant="body2" gutterBottom>
-                    TAC ERC20: <Link to="https://turin.explorer.tac.build/token/`{card.tokenAddress}`" style={{ margin: '0 8px', color: '#91029b' }}>TAC Explorer</Link>
+                    TAC ERC20: <Link to={`https://turin.explorer.tac.build/token/${card.tokenAddress}`} style={{ margin: '0 8px', color: '#91029b' }}>TAC Explorer</Link>
                   </Typography>
                 </Grid>
               </Grid>
