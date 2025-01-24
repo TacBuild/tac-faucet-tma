@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { type FC, type MouseEventHandler, useCallback } from 'react';
-import { RocketLaunch, CheckCircleOutline}  from '@mui/icons-material';
-import { Box, IconButton, Typography, LinearProgress, Button, Container } from '@mui/material';
+import { type FC } from 'react';
+import { RocketLaunch }  from '@mui/icons-material';
+import { Typography, LinearProgress, Button, Container } from '@mui/material';
 
 import './Progress.css'
 
-export const Progress: FC<ProgressProps> = ({message, loading, isCCLDone, closeProgress, stage}) => {
+export const Progress: FC<{ message: string, loading: boolean, isCCLDone: boolean, closeProgress: () => void, stage: number }>
+  = ({message, loading, isCCLDone, closeProgress, stage}) => {
 
     if (loading) {
       return (

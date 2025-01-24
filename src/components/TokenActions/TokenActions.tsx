@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Box, TextField, Toolbar, IconButton, Typography, Button, Container, Grid, Card, CardContent, CardActions, Switch } from '@mui/material';
-import { type FC, type MouseEventHandler, useCallback } from 'react';
+import { Box, TextField, Typography, Button, Grid2 } from '@mui/material';
+import { type FC, } from 'react';
 import { Progress } from "../Progress/Progress.tsx";
 
 import { useTonWallet, useTonAddress, useTonConnectUI} from '@tonconnect/ui-react';
-import { getSigleJettonBalance, getTONBalance, drip, refund } from '../../helpers/walletops.tsx';
+import { getSigleJettonBalance, drip, refund } from '../../helpers/walletops.tsx';
 
 import { data } from '../../helpers/config.tsx';
 
-import { tonLogo } from '../../assets/assets.tsx';
-
 import { useDebouncedCallback } from 'use-debounce';
+import {Address} from "@ton/core";
 
-const validateAmount = (isDrip: boolean, value: Number, lowerBound: Number, upperBound: Number, decimals: Number, tokenValue: Number, tonBalanceStr: string, jettonBalanceStr: string) => {
-  const tonBalance = parseFloat(tonBalanceStr);
-  const jettonBalance = parseFloat(jettonBalanceStr);
-
-  if (value === "" || value === 0)
-    return {
-      status: false,
-      message: "No Value"
-    };
+const validateAmount = (isDrip: boolean, value: number, lowerBound: number, upperBound: number, decimals: number, tokenValue: number, tonBalance: number, jettonBalance: number) => {
   if (isNaN(value))
     return {
       status: false,
       message: "Incomplete Value"
+    };
+  if (!value)
+    return {
+      status: false,
+      message: "No Value"
     };
   if (value < 0)
     return {
@@ -37,7 +33,7 @@ const validateAmount = (isDrip: boolean, value: Number, lowerBound: Number, uppe
         status: false,
         message: "Insufficient Funds"
       };
-    let amount = (value * tokenValue);
+    const amount = (value * tokenValue);
     if (amount < lowerBound)
       return {
         status: false,
@@ -71,8 +67,8 @@ const validateAmount = (isDrip: boolean, value: Number, lowerBound: Number, uppe
   }
 }
 
-export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, tokenIndex}) => {
-
+export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, tokenIndex: number }>
+  = ({tonBalance, updateBalance, tokenIndex}) => {
   const card = data.cards[tokenIndex];
 
   const [jettonBalance, setJettonBalance] = useState(0);
@@ -80,25 +76,21 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
   const [isRefundValid, setIsRefundValid] = useState(false);
   const [dripAmount, setDripAmount] = useState();
   const [refundAmount, setRefundAmount] = useState();
-  const [refundError, setRefundError] = useState(false);
-  const [dripError, setDripError] = useState(false);
+  const [refundError, setRefundError] = useState('');
+  const [dripError, setDripError] = useState('');
 
   const [isCCLPending, setIsCCLPending] = useState(false);
   const [isCCLDone, setIsCCLDone] = useState(false);
   const [stage, setStage] = useState(0);
   const [cclMessage, setCclMessage] = useState("");
 
-  const [txLinker, setTxLinker] = useState();
-
   const wallet = useTonWallet();
   const userAddress = useTonAddress();
-  const [tonConnectUI, setOptions] = useTonConnectUI();
+  const [tonConnectUI] = useTonConnectUI();
 
   const updateJettonBalance = async () => {
-    let jettonBalance = await getSigleJettonBalance(userAddress, tokenIndex);
-    if (!jettonBalance)
-      jettonBalance = 0;
-    setJettonBalance(jettonBalance);
+    const jettonBalance = await getSigleJettonBalance(Address.parse(userAddress), tokenIndex);
+    setJettonBalance(Number(jettonBalance || 0));
   }
 
   useEffect(() => {
@@ -115,7 +107,16 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
       setIsDripValid(false);
       setDripError("...")
       //run validation
-      let validationResult = validateAmount(true, value, card.lowerBound, card.upperBound, card.decimals, card.tokenValue, tonBalance, jettonBalance);
+      const validationResult = validateAmount(
+        true,
+        value,
+        Number(card.lowerBound),
+        Number(card.upperBound),
+        card.decimals,
+        Number(card.tokenValue),
+        tonBalance,
+        jettonBalance
+      );
       setIsDripValid(validationResult.status);
       //prepare execution
       if (validationResult.status){
@@ -136,7 +137,16 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
       setIsRefundValid(false);
       setRefundError("...")
       //run validation
-      let validationResult = validateAmount(false, value, card.lowerBound, card.upperBound, card.decimals, card.tokenValue, tonBalance, jettonBalance);
+      const validationResult = validateAmount(
+        false,
+        value,
+        Number(card.lowerBound),
+        Number(card.upperBound),
+        card.decimals,
+        Number(card.tokenValue),
+        tonBalance,
+        jettonBalance
+      );
       setIsRefundValid(validationResult.status);
       //prepare execution
       if (validationResult.status){
@@ -150,7 +160,7 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
     500
   );
 
-  const executeDrip = async (erc20ProxyApp) => {
+  const executeDrip = async (erc20ProxyApp: string) => {
     if(!wallet || !dripAmount || dripAmount === "")
       return console.log("Wallet not ready or no amount specified");
     setCclMessage("Initializing TAC Adapter");
@@ -159,7 +169,7 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
     await drip(tonConnectUI, dripAmount, erc20ProxyApp, setCclMessage, setIsCCLDone, setStage);
   }
 
-  const executeRefund = async (erc20ProxyApp, jettonMaster, tokenDecimals) => {
+  const executeRefund = async (erc20ProxyApp: string, jettonMaster: string, tokenDecimals: number) => {
     if(!wallet || !refundAmount || refundAmount === "")
       return console.log("Wallet not ready or no amount specified");
     setCclMessage("Initializing TAC Adapter");
@@ -181,44 +191,44 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
     <React.Fragment>
       <Progress message={cclMessage} loading={isCCLPending} isCCLDone={isCCLDone} closeProgress={closeProgress} stage={stage}/>
       <Box width="100%" alignItems="center" gap={1}>
-        <Grid container spacing={2} alignItems="top">
-          <Grid item xs={6} sm={6} l={6} xl={6}>
+        <Grid2 container spacing={2} alignItems="top">
+          <Grid2 size={6}>
             <Box display="block" alignItems="center" gap={1}>
               <Typography variant="caption" gutterBottom>
                 Type the amount of TON Testnet Tokens you want to send to get an equivalent amount of {card.tokenName}
               </Typography>
             </Box>
-          </Grid>
-          <Grid item xs={6} sm={6} l={6} xl={6}>
+          </Grid2>
+          <Grid2 size={6}>
             <Box display="block" alignItems="center" gap={1}>
               <Typography variant="caption" gutterBottom>
                 Type the amount of {card.tokenName} you want to send to get back the equivalent amount of TON Testnet
               </Typography>
             </Box>
-          </Grid>
-        </Grid>
-        <Grid container spacing={1} alignItems="center" sx={{marginTop: '10px'}}>
-          <Grid item xs={12} sm={12} l={12} xl={12} alignItems="center">
+          </Grid2>
+        </Grid2>
+        <Grid2 container spacing={1} alignItems="center" sx={{marginTop: '10px'}}>
+          <Grid2 size={12} alignItems="center">
             <Typography variant="body2">
               Your Current Balance:
             </Typography>
-          </Grid>
-          <Grid item xs={6} sm={6} l={6} xl={6} alignItems="left">
+          </Grid2>
+          <Grid2 size={6} alignItems="left">
             <Typography variant="body2">
               TON: { tonBalance }
             </Typography>
-          </Grid>
-          <Grid item xs={6} sm={6} l={6} xl={6} alignItems="right">
+          </Grid2>
+          <Grid2 size={6} alignItems="right">
             <Typography variant="body2">
               { card.tokenName }: { jettonBalance }
             </Typography>
-          </Grid>
-        </Grid>
-        <Grid container spacing={2} alignItems="center" sx={{marginTop: '10px'}}>
-          <Grid item xs={6} sm={6} l={6} xl={6}>
+          </Grid2>
+        </Grid2>
+        <Grid2 container spacing={2} alignItems="center" sx={{marginTop: '10px'}}>
+          <Grid2 size={6}>
             <Box display="block" alignItems="center" gap={1}>
               <TextField
-                error={!isDripValid && dripError ? true : false}
+                error={!!(!isDripValid && dripError)}
                 id="outlined-error-helper-text"
                 label="TON Amount"
                 type="number"
@@ -237,11 +247,11 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
                 { isCCLPending ? "..." : "Drip" }
               </Button>
             </Box>
-          </Grid>
-          <Grid item xs={6} sm={6} l={6} xl={6}>
+          </Grid2>
+          <Grid2 size={6}>
             <Box display="block" alignItems="center" gap={1}>
               <TextField
-                error={!isRefundValid && refundError ? true : false}
+                error={!!(!isRefundValid && refundError)}
                 id="outlined-error-helper-text"
                 label={card.tokenName + " Amount"}
                 type="number"
@@ -260,8 +270,8 @@ export const TokenActions: FC<TokenActionsProps> = ({tonBalance, updateBalance, 
                 { isCCLPending ? "..." : "Refund" }
               </Button>
             </Box>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Box>
     </React.Fragment>
   );

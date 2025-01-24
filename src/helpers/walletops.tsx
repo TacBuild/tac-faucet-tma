@@ -1,21 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTonWallet, useTonAddress } from "@tonconnect/ui-react";
-import { TonClient } from '@ton/ton';
-import { AssetBridgingData, EvmProxyMsg, Network, SenderFactory, TacSdk, TacSDKTonClientParams, TransactionStatus } from "tac-sdk";
+import {TonClient} from '@ton/ton';
+import {
+  AssetBridgingData,
+  Network,
+  SenderFactory,
+  TacSdk,
+  TransactionLinker,
+  TransactionStatus
+} from "tac-sdk";
 
-import { ethers } from "ethers";
-import { fromNano, toNano } from "@ton/ton";
-import { Address, beginCell} from "@ton/core";
+import {ethers} from "ethers";
+import {fromNano, toNano} from "@ton/ton";
+import {Address, beginCell} from "@ton/core";
 
-import { data } from '../helpers/config.tsx';
+import {data} from '../helpers/config.tsx';
+import {TonConnectUI} from "@tonconnect/ui-react";
 
 // @dev
-// * Helper function to retrive the JettonWalletAddress associated to the User's Wallet Address for a specific Jetton Token Master
+// * Helper function to retrieve the JettonWalletAddress associated to the User's Wallet Address for a specific Jetton Token Master
 // *
 const getUserJettonWalletAddress = async (userAddress: Address, jettonAddress: Address, client: TonClient) => {
-
-  userAddress = Address.parse(userAddress);
-
   try {
     const cell = beginCell().storeAddress(userAddress).endCell();
     const result = await client.runMethod(jettonAddress, 'get_wallet_address', [{
@@ -24,10 +27,9 @@ const getUserJettonWalletAddress = async (userAddress: Address, jettonAddress: A
     }])
     return result.stack.readAddress().toString()
   } catch (e) {
-    console.log("Failed to getUserJettonWalletAddress: "+e)
+    console.log("Failed to getUserJettonWalletAddress: " + e)
     return "";
   }
-
 }
 
 // @dev
@@ -39,7 +41,7 @@ const getJettonBalance = async (userJettonAddress: Address, client: TonClient) =
     const result = await client.runMethod(userJettonAddress, 'get_wallet_data')
     return Number(fromNano(result.stack.readNumber())).toFixed(4)
   } catch (e) {
-    console.log("Failed to getJettonBalance: "+e)
+    console.log("Failed to getJettonBalance: " + e)
     return 0;
   }
 
@@ -49,73 +51,53 @@ const getJettonBalance = async (userJettonAddress: Address, client: TonClient) =
 // * Helper function to retrive the TON Balance associated to the User's Wallet Address
 // *
 const getTONBalance = async (userAddress: Address) => {
-
-    const client = new TonClient({
-      endpoint: data.tonclientUrl,
-    })
-
-    try {
-      const balance = await client.getBalance(userAddress);
-      return Number(fromNano(balance)).toFixed(4);
-    } catch (e) {
-      console.log("Failed to getTONBalance: "+e);
-      return 0;
-    }
-  };
-
-  // @dev
-  // * Helper function to query the Balance of Jetton listed in the config file at index position tokenIndex.
-  // *
-const getSigleJettonBalance = async (userAddress: Address, tokenIndex: int) => {
   const client = new TonClient({
     endpoint: data.tonclientUrl,
   })
 
-  try{
-    const userJettonWalletAddress = await getUserJettonWalletAddress(userAddress, data.cards[tokenIndex].jettonMaster, client);
-      if(userJettonWalletAddress) {
-        const userJettonBalance = await getJettonBalance(userJettonWalletAddress, client);
-        if (userJettonBalance) {
-          return userJettonBalance;
-        }
-      }
+  try {
+    const balance = await client.getBalance(userAddress);
+    return Number(fromNano(balance)).toFixed(4);
   } catch (e) {
-    console.log("Failed to getSigleJettonBalance: "+e);
+    console.log("Failed to getTONBalance: " + e);
+    return 0;
+  }
+};
+
+// @dev
+// * Helper function to query the Balance of Jetton listed in the config file at index position tokenIndex.
+// *
+const getSigleJettonBalance = async (userAddress: Address, tokenIndex: number) => {
+  const client = new TonClient({
+    endpoint: data.tonclientUrl,
+  })
+
+  try {
+    const userJettonWalletAddress = await getUserJettonWalletAddress(userAddress, Address.parse(data.cards[tokenIndex].jettonMaster), client);
+    if (userJettonWalletAddress) {
+      const userJettonBalance = await getJettonBalance(Address.parse(userJettonWalletAddress), client);
+      if (userJettonBalance) {
+        return userJettonBalance;
+      }
+    }
+  } catch (e) {
+    console.log("Failed to getSigleJettonBalance: " + e);
     return 0;
   }
 
 }
 
 // @dev
-// * Helper function to aggregate queries to get Balance of ALL Jettons listed in the config file. Avoid using for too many tokens as it will generate too many 429 with public APIs.
-// *
-const getAllJettonsBalance = async (userAddress: Address) => {
-  const client = new TonClient({
-    endpoint: data.tonclientUrl,
-  })
-
-  let allJettonsBalance = [];
-
-  data.cards.map(async (card, index) => {
-    try{
-      const userJettonWalletAddress = await getUserJettonWalletAddress(userAddress, card.jettonMaster, client);
-        if(userJettonWalletAddress) {
-          const userJettonBalance = await getJettonBalance(userJettonWalletAddress, client);
-          if (userJettonBalance) {
-            allJettonsBalance[card.tokenName] = userJettonBalance;
-          }
-        }
-    } catch (e) {
-      console.log("Failed to allJettonsBalance: "+e);
-    }
-  });
-  return allJettonsBalance;
-}
-
-// @dev
 // * Helper function to trigger the drip of new tokens
 // *
-const drip = async (tonConnectUI, tonAmount, erc20ProxyApp, setCclMessage, setIsCCLDone, setStage) => {
+const drip = async (
+  tonConnectUI: TonConnectUI,
+  tonAmount: number,
+  erc20ProxyApp: string,
+  setCclMessage: (str: string) => void,
+  setIsCCLDone: (bool: boolean) => void,
+  setStage: (n: number) => void
+) => {
   try {
     const tacSdk = new TacSdk({
       network: Network.Testnet,
@@ -131,8 +113,8 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp, setCclMessage, setIs
     //User's EVM Wallet Address is abstracted away from the Proxy Contract itself that act as a user wallet in its internal logic (the "to" param in the mint() method)
     const evmWalletAddress = erc20ProxyApp;
 
-    console.log("tonAmount: "+tonAmount);
-    console.log("erc20ProxyApp: "+erc20ProxyApp)
+    console.log("tonAmount: " + tonAmount);
+    console.log("erc20ProxyApp: " + erc20ProxyApp)
 
     // create evm proxy msg
     const abi = new ethers.AbiCoder();
@@ -152,12 +134,12 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp, setCclMessage, setIs
     };
 
     const sender = await SenderFactory.getSender({
-        tonConnect: tonConnectUI,
-      });
+      tonConnect: tonConnectUI,
+    });
 
     // we are sending NATIVE TON, no need to specify a jetton address
     const assets: AssetBridgingData[] = [{
-        amount: Number(tonAmount)
+      amount: Number(tonAmount)
     }]
 
     const txLinker = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
@@ -165,10 +147,11 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp, setCclMessage, setIs
     setStage(20);
 
     const result = await pollStatus(txLinker, 200, 2, setCclMessage, setIsCCLDone, setStage);
+    console.log(result)
 
   } catch (e) {
-    console.log("TX failed with err: "+e);
-    setCclMessage("TX failed with err: "+e);
+    console.log("TX failed with err: " + e);
+    setCclMessage("TX failed with err: " + e);
     setIsCCLDone(true);
   }
 
@@ -177,7 +160,16 @@ const drip = async (tonConnectUI, tonAmount, erc20ProxyApp, setCclMessage, setIs
 // @dev
 // * Helper function to trigger the drip of new tokens
 // *
-const refund = async (tonConnectUI, tokenAmount, tokenDecimals, erc20ProxyApp, jettonMaster, setCclMessage, setIsCCLDone, setStage) => {
+const refund = async (
+  tonConnectUI: TonConnectUI,
+  tokenAmount: number,
+  tokenDecimals: number,
+  erc20ProxyApp: string,
+  jettonMaster: string,
+  setCclMessage: (str: string) => void,
+  setIsCCLDone: (bool: boolean) => void,
+  setStage: (n: number) => void
+) => {
 
   try {
     const tacSdk = new TacSdk({
@@ -207,8 +199,8 @@ const refund = async (tonConnectUI, tokenAmount, tokenDecimals, erc20ProxyApp, j
     };
 
     const sender = await SenderFactory.getSender({
-        tonConnect: tonConnectUI,
-      });
+      tonConnect: tonConnectUI,
+    });
 
     // create JettonTransferData (transfer jetton in TVM to swap)
     const assets: AssetBridgingData[] = []
@@ -222,29 +214,36 @@ const refund = async (tonConnectUI, tokenAmount, tokenDecimals, erc20ProxyApp, j
     setStage(20);
 
     const result = await pollStatus(txLinker, 200, 2, setCclMessage, setIsCCLDone, setStage);
-
+    console.log(result)
   } catch (e) {
-    console.log("TX failed with err: "+e);
-    setCclMessage("TX Failed! "+e);
+    console.log("TX failed with err: " + e);
+    setCclMessage("TX Failed! " + e);
     setIsCCLDone(true);
   }
 
 }
 
-async function pollStatus(txLinker, maxAttempts = 200, delay = 5, setCclMessage, setIsCCLDone, setStage) {
+async function pollStatus(
+  txLinker: TransactionLinker,
+  maxAttempts = 200,
+  delay = 5,
+  setCclMessage: (str: string) => void,
+  setIsCCLDone: (bool: boolean) => void,
+  setStage: (n: number) => void,
+) {
   const tracker = new TransactionStatus();
   let attempts = 0;
   let operationId = ""
   let currentStage = 20;
 
-  const updateStage = (newStage) => {
+  const updateStage = (newStage: number) => {
     if (newStage > currentStage) {
       currentStage = newStage;
       setStage(currentStage);
     }
   }
 
-  const poll = async () => {
+  const poll = async (): Promise<boolean | void> => {
     if (attempts >= maxAttempts) {
       setIsCCLDone(true);
       throw new Error("TX took more than expected, check execution on TAC Explorer");
@@ -283,7 +282,6 @@ async function pollStatus(txLinker, maxAttempts = 200, delay = 5, setCclMessage,
           updateStage(100);
           setIsCCLDone(true);
           return true;
-          break;
         case "TVMMerkleMessageExecuted":
           //Executed on TVM side
           //We skip this step as the time is
@@ -300,8 +298,6 @@ async function pollStatus(txLinker, maxAttempts = 200, delay = 5, setCclMessage,
 
   return poll();
 }
-
-const JSsleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
 export {
   getUserJettonWalletAddress,
