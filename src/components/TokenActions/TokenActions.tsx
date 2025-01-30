@@ -256,7 +256,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
                 id="outlined-error-helper-text"
                 label={card.tokenName + " Amount"}
                 type="number"
-                disabled={!isDripValid || isSigning}
+                disabled={isSigning}
                 onChange={(e) => {
                   debouncedRefundAmount(e.target.value)
                 }}
