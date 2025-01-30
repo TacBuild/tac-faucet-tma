@@ -9,7 +9,6 @@ import {TokenActions} from '@/components/TokenActions/TokenActions.tsx';
 export const Tokens: FC<{ tonBalance: number, updateBalance: () => void }>
   = ({tonBalance, updateBalance}) => {
   const [tokenIndex, setTokenIndex] = useState<number | null>(null);
-
   return (
     <React.Fragment>
       <Grid2 container columns={{xs: 1, sm: 2, md: 3}} spacing={2}>
@@ -36,7 +35,7 @@ export const Tokens: FC<{ tonBalance: number, updateBalance: () => void }>
                     </Typography>
                     <Typography variant="body2" gutterBottom>
                       TON
-                      Jetton: <Link to={`https://testnet.tonviewer.com/${card.jettonAddress}`} style={{
+                      Jetton: <Link to={`https://testnet.tonviewer.com/${card.tvmTokenAddress}`} style={{
                       margin: '0 8px',
                       color: '#91029b'
                     }}>Tonviewer</Link>
