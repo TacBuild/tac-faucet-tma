@@ -1,8 +1,9 @@
-import { useLaunchParams, miniApp, useSignal } from '@telegram-apps/sdk-react';
-import { AppRoot } from '@telegram-apps/telegram-ui';
-import { Navigate, Route, Routes, HashRouter } from 'react-router-dom';
+import {useLaunchParams, miniApp, useSignal} from '@telegram-apps/sdk-react';
+import {AppRoot} from '@telegram-apps/telegram-ui';
+import {Navigate, Route, Routes, HashRouter} from 'react-router-dom';
 
-import { routes } from '@/navigation/routes.tsx';
+import {routes} from '@/navigation/routes.tsx';
+import {TransactionProgress} from "@/components/Transaction/TransactionProgress.tsx";
 
 export function App() {
   const lp = useLaunchParams();
@@ -16,9 +17,11 @@ export function App() {
       <HashRouter>
         <Routes>
           {routes.map((route) => <Route key={route.path} {...route} />)}
-          <Route path="*" element={<Navigate to="/"/>}/>
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </HashRouter>
+
+      <TransactionProgress />
     </AppRoot>
   );
 }

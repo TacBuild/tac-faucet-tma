@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Box, TextField, Typography, Button, Grid2 } from '@mui/material';
-import { type FC, } from 'react';
-import { Progress } from "../Progress/Progress.tsx";
+import React, {useState, useEffect} from 'react';
+import {Box, Stack, TextField, Typography, Button, Grid2} from '@mui/material';
+import {type FC} from 'react';
 
-import { useTonWallet, useTonAddress, useTonConnectUI} from '@tonconnect/ui-react';
-import { getSigleJettonBalance, drip, refund } from '../../helpers/walletops.tsx';
+import {useTonWallet, useTonAddress, useTonConnectUI} from '@tonconnect/ui-react';
+import {getJettonBalance} from '../../helpers/walletops.tsx';
 
-import { data } from '../../helpers/config.tsx';
+import {data} from '../../helpers/config.tsx';
 
-import { useDebouncedCallback } from 'use-debounce';
+import {useDebouncedCallback} from 'use-debounce';
 import {Address} from "@ton/core";
+import {useCCT} from "@/hooks/useCCT.ts";
+import {Refresh} from "@mui/icons-material";
 
 const validateAmount = (isDrip: boolean, value: number, lowerBound: number, upperBound: number, decimals: number, tokenValue: number, tonBalance: number, jettonBalance: number) => {
   if (isNaN(value))
@@ -75,22 +76,30 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
   const [isDripValid, setIsDripValid] = useState(false);
   const [isRefundValid, setIsRefundValid] = useState(false);
   const [dripAmount, setDripAmount] = useState();
-  const [refundAmount, setRefundAmount] = useState();
+  const [refundAmount, setRefundAmount] = useState('20');
   const [refundError, setRefundError] = useState('');
   const [dripError, setDripError] = useState('');
+  const [isJettonBalanceLoading, setIsJettonBalanceLoading] = useState(false);
+  const [jettonBalanceError, setJettonBalanceError] = useState('');
 
-  const [isCCLPending, setIsCCLPending] = useState(false);
-  const [isCCLDone, setIsCCLDone] = useState(false);
-  const [stage, setStage] = useState(0);
-  const [cclMessage, setCclMessage] = useState("");
+  // const { isRunning } = useContext(CCTContext);
+  const {isSigning, drip, refund} = useCCT()
 
   const wallet = useTonWallet();
   const userAddress = useTonAddress();
   const [tonConnectUI] = useTonConnectUI();
 
   const updateJettonBalance = async () => {
-    const jettonBalance = await getSigleJettonBalance(Address.parse(userAddress), tokenIndex);
-    setJettonBalance(Number(jettonBalance || 0));
+    try {
+      setJettonBalanceError('')
+      setIsJettonBalanceLoading(true)
+      const jettonBalance = await getJettonBalance(Address.parse(userAddress), tokenIndex);
+      setJettonBalance(jettonBalance);
+    } catch (e) {
+      setJettonBalanceError('Unknown');
+    } finally {
+      setIsJettonBalanceLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -100,109 +109,93 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
     }
   }, [tokenIndex]);
 
-  const debouncedDripAmount = useDebouncedCallback(
-    // function
-    (value) => {
-      //reset status
-      setIsDripValid(false);
-      setDripError("...")
-      //run validation
-      const validationResult = validateAmount(
-        true,
-        value,
-        Number(card.lowerBound),
-        Number(card.upperBound),
-        card.decimals,
-        Number(card.tokenValue),
-        tonBalance,
-        jettonBalance
-      );
-      setIsDripValid(validationResult.status);
-      //prepare execution
-      if (validationResult.status){
-        setDripAmount(value)
-      }
-      //show errors
-      if (validationResult.message)
-        setDripError(validationResult.message);
-    },
-    // delay in ms
-    500
-  );
+  const debouncedDripAmount = useDebouncedCallback((value) => {
+    //reset status
+    setIsDripValid(false);
+    setDripError("...")
+    //run validation
+    const validationResult = validateAmount(
+      true,
+      value,
+      Number(card.lowerBound),
+      Number(card.upperBound),
+      card.decimals,
+      Number(card.tokenValue),
+      tonBalance,
+      jettonBalance
+    );
+    setIsDripValid(validationResult.status);
+    //prepare execution
+    if (validationResult.status) {
+      setDripAmount(value)
+    }
+    //show errors
+    if (validationResult.message)
+      setDripError(validationResult.message);
+  }, 500);
 
-  const debouncedRefundAmount = useDebouncedCallback(
-    // function
-    (value) => {
-      //reset status
-      setIsRefundValid(false);
-      setRefundError("...")
-      //run validation
-      const validationResult = validateAmount(
-        false,
-        value,
-        Number(card.lowerBound),
-        Number(card.upperBound),
-        card.decimals,
-        Number(card.tokenValue),
-        tonBalance,
-        jettonBalance
-      );
-      setIsRefundValid(validationResult.status);
-      //prepare execution
-      if (validationResult.status){
-        setRefundAmount(value)
-      }
-      //show errors
-      if (validationResult.message)
-        setRefundError(validationResult.message);
-    },
-    // delay in ms
-    500
-  );
+  const debouncedRefundAmount = useDebouncedCallback((value) => {
+    //reset status
+    setIsRefundValid(false);
+    setRefundError("...")
+    //run validation
+    const validationResult = validateAmount(
+      false,
+      value,
+      Number(card.lowerBound),
+      Number(card.upperBound),
+      card.decimals,
+      Number(card.tokenValue),
+      tonBalance,
+      jettonBalance
+    );
+    setIsRefundValid(validationResult.status);
+    //prepare execution
+    if (validationResult.status) {
+      setRefundAmount(value)
+    }
+    //show errors
+    if (validationResult.message)
+      setRefundError(validationResult.message);
+  }, 500);
 
-  const executeDrip = async (erc20ProxyApp: string) => {
-    if(!wallet || !dripAmount || dripAmount === "")
+  const executeDrip = async () => {
+    if (!wallet || !dripAmount || dripAmount === "")
       return console.log("Wallet not ready or no amount specified");
-    setCclMessage("Initializing TAC Adapter");
-    setIsCCLPending(true);
-    setIsCCLDone(false);
-    await drip(tonConnectUI, dripAmount, erc20ProxyApp, setCclMessage, setIsCCLDone, setStage);
+    await drip(tonConnectUI, dripAmount, card.proxyAddress);
+
+    setTimeout(() => {
+      updateBalance()
+    }, 5000)
   }
 
-  const executeRefund = async (erc20ProxyApp: string, jettonMaster: string, tokenDecimals: number) => {
-    if(!wallet || !refundAmount || refundAmount === "")
+  const executeRefund = async () => {
+    if (!wallet || !refundAmount || refundAmount === "")
       return console.log("Wallet not ready or no amount specified");
-    setCclMessage("Initializing TAC Adapter");
-    setIsCCLPending(true);
-    setIsCCLDone(false);
-    await refund(tonConnectUI, refundAmount, tokenDecimals, erc20ProxyApp, jettonMaster, setCclMessage, setIsCCLDone, setStage);
-  }
+    await refund(tonConnectUI, Number(refundAmount), card.proxyAddress, card.tokenAddress);
 
-  const closeProgress = async () => {
-    setIsCCLPending(false);
-    //TON state is updated with a 5/10sec delay
-    setTimeout(async function() {
-      await updateBalance();
-      await updateJettonBalance();
-    }, 10000);
+    setTimeout(() => {
+      updateBalance()
+    }, 5000)
   }
 
   return (
     <React.Fragment>
-      <Progress message={cclMessage} loading={isCCLPending} isCCLDone={isCCLDone} closeProgress={closeProgress} stage={stage}/>
       <Box width="100%" alignItems="center" gap={1}>
         <Grid2 container spacing={2} alignItems="top">
           <Grid2 size={6}>
             <Box display="block" alignItems="center" gap={1}>
               <Typography variant="caption" gutterBottom>
-                Type the amount of TON Testnet Tokens you want to send to get an equivalent amount of {card.tokenName}
+                Type the amount of TON Testnet Tokens you want to send to get an equivalent amount
+                of {card.tokenName}
               </Typography>
             </Box>
           </Grid2>
           <Grid2 size={6}>
             <Box display="block" alignItems="center" gap={1}>
               <Typography variant="caption" gutterBottom>
-                Type the amount of {card.tokenName} you want to send to get back the equivalent amount of TON Testnet
+                Type the amount of {card.tokenName} you want to send to get back the equivalent
+                amount of TON Testnet
               </Typography>
             </Box>
           </Grid2>
@@ -215,48 +208,58 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
           </Grid2>
           <Grid2 size={6} alignItems="left">
             <Typography variant="body2">
-              TON: { tonBalance }
+              TON: {tonBalance}
             </Typography>
           </Grid2>
           <Grid2 size={6} alignItems="right">
             <Typography variant="body2">
-              { card.tokenName }: { jettonBalance }
+              {card.tokenName}: {jettonBalanceError ?
+                (<Typography variant="body2" sx={{display: "inline-flex", gap: '2px', alignItems: 'center'}} color="red">
+                  { jettonBalanceError }
+                    <Refresh sx={{fontSize: "16px", cursor: "pointer"}} onClick={() => updateJettonBalance()} />
+                </Typography>) :
+                (<>{isJettonBalanceLoading ? 'Loading...' : jettonBalance}</>)
+              }
             </Typography>
           </Grid2>
         </Grid2>
         <Grid2 container spacing={2} alignItems="center" sx={{marginTop: '10px'}}>
           <Grid2 size={6}>
-            <Box display="block" alignItems="center" gap={1}>
+            <Stack display="block" alignItems="center" spacing={1}>
               <TextField
                 error={!!(!isDripValid && dripError)}
                 id="outlined-error-helper-text"
                 label="TON Amount"
                 type="number"
-                disabled={isCCLPending}
+                disabled={isSigning}
                 helperText={isDripValid ? "" : dripError}
-                onChange={(e) => { debouncedDripAmount(e.target.value) }}
+                onChange={(e) => {
+                  debouncedDripAmount(e.target.value)
+                }}
                 fullWidth
               />
               <Button
                 size="small"
                 variant="contained"
                 color="primary"
-                disabled={!isDripValid || isCCLPending}
-                onClick={ () => executeDrip(card.erc20ProxyApp)}
+                disabled={!isDripValid || isSigning}
+                onClick={() => executeDrip()}
               >
-                { isCCLPending ? "..." : "Drip" }
+                {isSigning ? "..." : "Drip"}
               </Button>
-            </Box>
+            </Stack>
           </Grid2>
           <Grid2 size={6}>
-            <Box display="block" alignItems="center" gap={1}>
+            <Stack display="block" alignItems="center" spacing={1}>
               <TextField
                 error={!!(!isRefundValid && refundError)}
                 id="outlined-error-helper-text"
                 label={card.tokenName + " Amount"}
                 type="number"
-                disabled={isCCLPending}
-                onChange={(e) => { debouncedRefundAmount(e.target.value) }}
+                disabled={!isDripValid || isSigning}
+                onChange={(e) => {
+                  debouncedRefundAmount(e.target.value)
+                }}
                 helperText={isRefundValid ? "" : refundError}
                 fullWidth
               />
@@ -264,12 +267,12 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
                 size="small"
                 variant="outlined"
                 color="secondary"
-                disabled={!isRefundValid || isCCLPending}
-                onClick={ () => executeRefund(card.erc20ProxyApp, card.jettonMaster, card.decimals)}
+                disabled={!isRefundValid || isSigning}
+                onClick={() => executeRefund()}
               >
-                { isCCLPending ? "..." : "Refund" }
+                {isSigning ? "..." : "Refund"}
               </Button>
-            </Box>
+            </Stack>
           </Grid2>
         </Grid2>
       </Box>

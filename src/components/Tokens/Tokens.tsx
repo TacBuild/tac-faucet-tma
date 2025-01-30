@@ -18,12 +18,12 @@ export const Tokens: FC<{ tonBalance: number, updateBalance: () => void }>
             <Card>
               <CardContent>
                 {<Grid2 container spacing={2} width="100%" alignItems="center">
-                  <Grid2 size={{xs: 10, sm: 10, lg: 10, xl: 10}} alignItems="left">
+                  <Grid2 size={8} alignItems="left">
                     <Typography variant="h5" gutterBottom>
                       {card.tokenName}
                     </Typography>
                   </Grid2>
-                  <Grid2 size={{xs: 2, sm: 2, lg: 2, xl: 2}} alignItems="right">
+                  <Grid2 size={4} container justifyContent="right">
                     <img src={card.logo} alt={card.title} style={{
                       width: 50,
                       height: 50,
@@ -36,7 +36,7 @@ export const Tokens: FC<{ tonBalance: number, updateBalance: () => void }>
                     </Typography>
                     <Typography variant="body2" gutterBottom>
                       TON
-                      Jetton: <Link to={`https://testnet.tonviewer.com/${card.jettonMaster}`} style={{
+                      Jetton: <Link to={`https://testnet.tonviewer.com/${card.jettonAddress}`} style={{
                       margin: '0 8px',
                       color: '#91029b'
                     }}>Tonviewer</Link>
