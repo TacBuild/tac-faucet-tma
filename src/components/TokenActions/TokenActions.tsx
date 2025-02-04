@@ -35,7 +35,7 @@ const validateAmount = (isDrip: boolean, value: number, lowerBound: number, uppe
         message: "Insufficient Funds"
       };
     const amount = (value * tokenValue);
-    if (amount < lowerBound)
+    if (amount <= lowerBound)
       return {
         status: false,
         message: "Amount too low"
