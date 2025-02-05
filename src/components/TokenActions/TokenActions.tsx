@@ -11,6 +11,7 @@ import {useDebouncedCallback} from 'use-debounce';
 import {Address} from "@ton/core";
 import {useCCT} from "@/hooks/useCCT.ts";
 import {Refresh} from "@mui/icons-material";
+import {fromNano} from "@ton/ton";
 
 const validateAmount = (isDrip: boolean, value: number, lowerBound: number, upperBound: number, decimals: number, tokenValue: number, tonBalance: number, jettonBalance: number) => {
   if (isNaN(value))
@@ -94,7 +95,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
       setJettonBalanceError('')
       setIsJettonBalanceLoading(true)
       const jettonBalance = await getJettonBalance(Address.parse(userAddress), tokenIndex);
-      setJettonBalance(jettonBalance);
+      setJettonBalance(Number(fromNano(jettonBalance)));
     } catch (e) {
       setJettonBalanceError('Unknown');
     } finally {

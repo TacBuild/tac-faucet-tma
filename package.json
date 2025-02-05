@@ -35,7 +35,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.0",
     "styled-components": "^6.1.13",
-    "tac-sdk": "^0.3.6-rc-5",
+    "tac-sdk": "^0.4.2",
     "use-debounce": "^10.0.4",
     "usehooks-ts": "^3.1.0",
     "zustand": "^5.0.3"
