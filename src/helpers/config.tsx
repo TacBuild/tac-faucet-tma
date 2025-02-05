@@ -11,15 +11,15 @@ import {
   tgbtcLogo,
   tstonLogo,
   redoLogo,
-  catsLogo
+  catsLogo, wbtcLogo, lombardLogo, ethenaLogo, wethLogo, usdtLogo, etherfiLogo, ezethLogo
 } from '../assets/assets.js'
 
 export const data =
-{
-  "tonclientUrl": "https://testnet.toncenter.com/api/v2/jsonRPC?api_key=***REMOVED***",
-  "cards": [
+  {
+    "tonclientUrl": "https://testnet.toncenter.com/api/v2/jsonRPC?api_key=***REMOVED***",
+    "cards": [
       {
-        "title" : "Teleport Bitcoin",
+        "title": "Teleport Bitcoin",
         "logo": tgbtcLogo,
         "tokenName": "tgBTC",
         "tokenAddress": "0xc6351A409f10a5b5125224D6496d12ee1bE49d54",
@@ -32,7 +32,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Notcoin",
+        "title": "Notcoin",
         "logo": notcoinLogo,
         "tokenName": "NOT",
         "tokenAddress": "0x132911A0eD9803BAa703048618B38638c40D24C1",
@@ -45,7 +45,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Hamster Kombat",
+        "title": "Hamster Kombat",
         "logo": hamsterLogo,
         "tokenName": "HMSTR",
         "tokenAddress": "0xFF2FDb1C8D6c82858A998D65633fb5a3D87b5A10",
@@ -58,7 +58,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "DOGS",
+        "title": "DOGS",
         "logo": dogsLogo,
         "tokenName": "DOGS",
         "tokenAddress": "0x232B3FF9145d6bA31A3c552da7eBEff354f5b073",
@@ -71,7 +71,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "TonStakers Staked TON",
+        "title": "TonStakers Staked TON",
         "logo": tstonLogo,
         "tokenName": "tsTON",
         "tokenAddress": "0x1c63C68479574Bb9E3a76e842B9272013a717723",
@@ -84,7 +84,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "REsistance DOg",
+        "title": "REsistance DOg",
         "logo": redoLogo,
         "tokenName": "REDO",
         "tokenAddress": "0x8b55778dB15beafc4709D02D1B712D0109Ad725a",
@@ -97,7 +97,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "CATS",
+        "title": "CATS",
         "logo": catsLogo,
         "tokenName": "CATS",
         "tokenAddress": "0xb2e8609Ea7EE128967E4C33fB023d270de3f560b",
@@ -110,7 +110,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Catizen",
+        "title": "Catizen",
         "logo": catizenLogo,
         "tokenName": "CATI",
         "tokenAddress": "0xc1EA29c1c3923089A35258a15801626F820CDa86",
@@ -123,7 +123,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Bemo Staked TON",
+        "title": "Bemo Staked TON",
         "logo": bemoLogo,
         "tokenName": "stTON",
         "tokenAddress": "0x831ca6cA752643E0b9E2a4A42A5d77a93E3D6241",
@@ -136,7 +136,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Storm Finance",
+        "title": "Storm Finance",
         "logo": stormLogo,
         "tokenName": "STORM",
         "tokenAddress": "0x838A5c8EbEb2ad98412444Bd34714Ea652c0cbBB",
@@ -149,7 +149,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Povel Durev",
+        "title": "Povel Durev",
         "logo": durevLogo,
         "tokenName": "DUREV",
         "tokenAddress": "0x6F615BF749F6E000aEBFd0C2C2b7ab43d4930438",
@@ -162,7 +162,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "NikoAI",
+        "title": "NikoAI",
         "logo": nikoaiLogo,
         "tokenName": "NikoAI",
         "tokenAddress": "0x5f807D892Fd1A73936a3DB132E61Adebe6237247",
@@ -175,7 +175,7 @@ export const data =
         "decimals": 9
       },
       {
-        "title" : "Ston.Fi",
+        "title": "Ston.Fi",
         "logo": stonLogo,
         "tokenName": "STON",
         "tokenAddress": "0xc0C7851E4F31956f3569be9bFB7246F1Bd85FBD7",
@@ -186,6 +186,99 @@ export const data =
         "upperBound": "10000000000000000",
         "lowerBound": "500000000",
         "decimals": 9
+      },
+      {
+        "title": "Tether USD",
+        "logo": usdtLogo,
+        "tokenName": "USDT",
+        "tokenAddress": "0x40d02AAe9D294Ebefe818Bc9020a9883E055154e",
+        "jettonAddress": "0xFb9a30A0fa10D9d1cACa4FE36Ad59Ca166A37d64",
+        "proxyAddress": "0x60C581F9740854A9BCA22396a3A3E2e13d6a8758",
+        "tvmTokenAddress": "EQDHWeU8l1QZkcK3Db5fDys7rdzJYuFHzToFxZNAurRNLf17",
+        "tokenValue": "6400000",
+        "upperBound": "10000000000",
+        "lowerBound": "50000",
+        "decimals": 6
+      },
+      {
+        "title": "Ethena USD",
+        "logo": ethenaLogo,
+        "tokenName": "USDE",
+        "tokenAddress": "0xd90C2a08460fB03847fd13093406233203328a7A",
+        "jettonAddress": "0xF5e65dF81EC4b76E5DdDaE279ca07FAcc2E0AC62",
+        "proxyAddress": "0x60839E6f1da6CD75c22529bCC1B78dE39705f629",
+        "tvmTokenAddress": "EQDo_W2rKE26Uehe-VcswZUolHnXwwKli_F18vRDd84yM_2Q",
+        "tokenValue": "6400000000000000000",
+        "upperBound": "10000000000000000000000",
+        "lowerBound": "50000000000000000",
+        "decimals": 18
+      },
+      {
+        "title": "WrappedETH",
+        "logo": wethLogo,
+        "tokenName": "WETH",
+        "tokenAddress": "0x2183Bb115F6f90840B1d6FEd0857149546e4BF22",
+        "jettonAddress": "0xCB8e277805160B57bf3802BFfC1795938dCb5916",
+        "proxyAddress": "0xbDC5c054E5E79579d7f733D7cF75520Aa8d8CEDC",
+        "tvmTokenAddress": "EQAvj1JxMhGENWjxEnJ0LozlvuWyl-5pKfqs1_ZeD_BupIJm",
+        "tokenValue": "165000000000000",
+        "upperBound": "10000000000000000000",
+        "lowerBound": "50000000000000",
+        "decimals": 18
+      },
+      {
+        "title": "Ether.Fi ETH",
+        "logo": etherfiLogo,
+        "tokenName": "EETH",
+        "tokenAddress": "0x309EE0448100201CcC3DB0cED9e79F5D97A72dB7",
+        "jettonAddress": "0x8C1c9Ac11E9aDB0c5E0a385CF88C130d66c84930",
+        "proxyAddress": "0x4E1Ba7D8aE10A3af57E0eCA30CE2CE676eFf6a36",
+        "tvmTokenAddress": "EQAJKjiFrCdwBM4THpYA5cLZ3JElPEUZvxMbu0RDvONmLc0O",
+        "tokenValue": "150000000000000",
+        "upperBound": "10000000000000000000",
+        "lowerBound": "50000000000000",
+        "decimals": 18
       }
-  ]
-};
+      ,
+      {
+        "title": "Renzo ETH",
+        "logo": ezethLogo,
+        "tokenName": "ezETH",
+        "tokenAddress": "0x57705Dbb817F880A30cb9656D0a8e7F86f416B0E",
+        "jettonAddress": "0xd8ea1893A8223a34Bd385DAE5B60A2228687f19a",
+        "proxyAddress": "0x79E1A90f03799267eCAcE44e88508C6B3871d1a5",
+        "tvmTokenAddress": "EQC_GKr_BeOeT_fA-tYT54rUiBkr3v9KLlFUo0yfiGC8PAml\n",
+        "tokenValue": "150000000000000",
+        "upperBound": "10000000000000000000",
+        "lowerBound": "50000000000000",
+        "decimals": 18
+      }
+      ,
+      {
+        "title": "Wrapped BTC",
+        "logo": wbtcLogo,
+        "tokenName": "wBTC",
+        "tokenAddress": "0x86D8C875A4F21cb60F185ECC1F3a605E88d58Cca",
+        "jettonAddress": "0x663c8E326F49827273D2ec35c9387E2FD3193CDa",
+        "proxyAddress": "0xC3d34FfdAE8F7A91901B4737fD225cfE8d5B21c0",
+        "tvmTokenAddress": "EQCU-6Ut23goIORvHaLOApXoR49V6gHweGNEcqLEbT60zR9d",
+        "tokenValue": "64000000000000",
+        "upperBound": "1000000000000000000",
+        "lowerBound": "500000000000",
+        "decimals": 18
+      },
+      {
+        "title": "Lombard BTC",
+        "logo": lombardLogo,
+        "tokenName": "LBTC",
+        "tokenAddress": "0x0B712c365c344221B09bBDD8dD1b828De86Fb24A",
+        "jettonAddress": "0x1b4B77410D667277810aB0ff7C7dfF0Bee616a7D",
+        "proxyAddress": "0x230845F9B1F2834aE5A5Bf2719595890C771aE05",
+        "tvmTokenAddress": "EQBmwjEdq5vkuvfrBiXzsjIfD5_g-Se216Hy8T7mnqXIOQii",
+        "tokenValue": "64000000000000",
+        "upperBound": "1000000000000000000",
+        "lowerBound": "500000000000",
+        "decimals": 18
+      }
+    ]
+  };

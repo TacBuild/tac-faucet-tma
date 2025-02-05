@@ -6,6 +6,7 @@ import catizenLogo from "./catizen.png";
 import dogsLogo from "./dogs.png";
 import durevLogo from "./durev.png";
 import ethenaLogo from "./ethena.png";
+import ezethLogo from "./ezeth.png";
 import etherfiLogo from "./etherfi.png";
 import hamsterLogo from "./hamster.png";
 import lombardLogo from "./lombard.png";
@@ -45,5 +46,6 @@ export {
   wethLogo,
   wbtcLogo,
   redoLogo,
-  catsLogo
+  catsLogo,
+  ezethLogo
 };

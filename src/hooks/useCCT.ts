@@ -185,7 +185,7 @@ export function useCCT() {
 
   }
 
-  const refund = async (tonConnectUI: TonConnectUI, tokenAmount: number, proxyAddress: string, jettonAddress: string) => {
+  const refund = async (tonConnectUI: TonConnectUI, tokenAmount: number, proxyAddress: string, jettonAddress: string, decimals: number = 9) => {
     try {
       if (useStore.getState().isRunning) {
         store.setIsSigning(true);
@@ -215,7 +215,7 @@ export function useCCT() {
       const tvmAddress = await tacSdk.getTVMTokenAddress(jettonAddress)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const encodedArguments = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256)"], [[proxyAddress, Number(toNano(tokenAmount))]]);
+      const encodedArguments = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256)"], [[proxyAddress, BigInt(tokenAmount * 10 ** decimals)]]);
       const evmProxyMsg = {
         evmTargetAddress: proxyAddress,
         methodName: "burn(bytes,bytes)",

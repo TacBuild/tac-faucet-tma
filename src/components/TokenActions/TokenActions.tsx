@@ -11,7 +11,6 @@ import {useDebouncedCallback} from 'use-debounce';
 import {Address} from "@ton/core";
 import {useCCT} from "@/hooks/useCCT.ts";
 import {Refresh} from "@mui/icons-material";
-import {fromNano} from "@ton/ton";
 
 const validateAmount = (isDrip: boolean, value: number, lowerBound: number, upperBound: number, decimals: number, tokenValue: number, tonBalance: number, jettonBalance: number) => {
   if (isNaN(value))
@@ -36,6 +35,7 @@ const validateAmount = (isDrip: boolean, value: number, lowerBound: number, uppe
         message: "Insufficient Funds"
       };
     const amount = (value * tokenValue);
+    console.log(amount)
     if (amount <= lowerBound)
       return {
         status: false,
@@ -95,7 +95,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
       setJettonBalanceError('')
       setIsJettonBalanceLoading(true)
       const jettonBalance = await getJettonBalance(Address.parse(userAddress), tokenIndex);
-      setJettonBalance(Number(fromNano(jettonBalance)));
+      setJettonBalance(jettonBalance);
     } catch (e) {
       setJettonBalanceError('Unknown');
     } finally {
@@ -173,7 +173,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
   const executeRefund = async () => {
     if (!wallet || !refundAmount || refundAmount === "")
       return console.log("Wallet not ready or no amount specified");
-    await refund(tonConnectUI, Number(refundAmount), card.proxyAddress, card.tokenAddress);
+    await refund(tonConnectUI, Number(refundAmount), card.proxyAddress, card.tokenAddress, card.decimals);
 
     setTimeout(() => {
       updateBalance()

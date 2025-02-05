@@ -35,9 +35,11 @@ const getJettonBalance = async (userAddress: Address, tokenIndex: number) => {
     });
     const tvmMasterAddress = await tacSdk.getTVMTokenAddress(data.cards[tokenIndex].tokenAddress)
     const userJettonBalance = await tacSdk.getUserJettonBalance(userAddress.toString(), tvmMasterAddress);
+    const decimals = data.cards[tokenIndex].decimals;
+    const balance = Number(userJettonBalance) / 10 ** decimals || 0
 
     tacSdk.closeConnections()
-    return userJettonBalance || 0
+    return balance
   } catch (e) {
     console.log("Failed to getJettonBalance: " + e);
     if ((e as { status: number })?.status?.toString().startsWith('5')) {
