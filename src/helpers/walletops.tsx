@@ -3,7 +3,7 @@ import {fromNano} from "@ton/ton";
 import {Address} from "@ton/core";
 
 import {data} from '../helpers/config.tsx';
-import {Network, TacSdk} from "tac-sdk";
+import {Network, TacSdk} from "@tonappchain/sdk";
 
 const getTONBalance = async (userAddress: Address) => {
   const client = new TonClient({
@@ -25,7 +25,7 @@ const getTONBalance = async (userAddress: Address) => {
 const getJettonBalance = async (userAddress: Address, tokenIndex: number) => {
   try {
     const tacSdk = await TacSdk.create({
-      network: Network.Testnet,
+      network: Network.TESTNET,
       TONParams: {
         contractOpener: new TonClient({
           endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",

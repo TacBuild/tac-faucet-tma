@@ -1,11 +1,12 @@
-import {TonConnectUI} from "@tonconnect/ui-react";
+import {TonConnectUI, UserRejectsError} from "@tonconnect/ui-react";
 import {
   Network,
   OperationTracker,
   SenderFactory,
+  StageName,
   TacSdk,
   TransactionLinker
-} from "tac-sdk";
+} from "@tonappchain/sdk";
 import {ethers} from "ethers";
 import {toNano, TonClient} from "@ton/ton";
 import {create} from "zustand";
@@ -53,19 +54,8 @@ const useStore = create<State>()((set) => ({
 export function useCCT() {
   const store = useStore(state => state);
 
-  const getOperationStatus = async (operationId: string) => {
-    // TODO: sdk is not updated its getOperationStatus method yet
-
-    const res = await fetch("https://turin.data.tac.build/status", {
-      body: JSON.stringify({operationIds: [operationId]}),
-      method: "POST",
-    });
-    const {response} = await res.json();
-    return response[0].status;
-  }
-
   async function pollStatus(txLinker: TransactionLinker, maxAttempts = 200, delay = 5) {
-    const tracker = new OperationTracker(Network.Testnet);
+    const tracker = new OperationTracker(Network.TESTNET);
     let attempts = 0;
     let operationId = ""
 
@@ -83,38 +73,40 @@ export function useCCT() {
         operationId = await tracker.getOperationId(txLinker).catch(() => '');
         store.setMessage("Waiting for TAC OperationId");
       } else {
-        const status = await getOperationStatus(operationId).catch(() => '');
-        switch (status) {
-          case "EVMMerkleMessageCollected":
+        const { stage } = await tracker.getOperationStatus(operationId).catch(() => ({ stage: '' }));
+        switch (stage) {
+          case StageName.COLLECTED_IN_TAC:
             //All events collected for sharded message
             store.setProgress(40);
-            store.setMessage("TX Collected by the TAC Adapter...");
+            store.setMessage("Collected in TAC...");
             break;
-          case "EVMMerkleRootSet":
+          case StageName.INCLUDED_IN_TAC_CONSENSUS:
             //Message added to Merkle tree
             store.setProgress(60);
-            store.setMessage("TX Executed by TAC Adapter, waiting for the finalization...");
+            store.setMessage("Included in TAC consensus...");
             break;
-          case "EVMMerkleMessageExecuted":
+          case StageName.EXECUTED_IN_TAC:
             //Executed on EVM side
             store.setProgress(70);
-            store.setMessage("TX finalized on TAC, going back to TON...");
+            store.setMessage("Executed in TAC...");
             break;
-          case "TVMMerkleMessageCollected":
+          case StageName.COLLECTED_IN_TON:
             //Return message generated
             store.setProgress(80);
-            store.setMessage("TX Collected by the TAC adapter...");
+            store.setMessage("Collected in TON...");
             break;
-          case "TVMMerkleRootSet":
+          case StageName.INCLUDED_IN_TON_CONSENSUS:
             //TVM message added to tree
-            store.setMessage("TX scheduled on TON, you will see the updated balance on your wallet in a few seconds...");
+            store.setMessage("Executing in TON, finishing...");
+            store.setProgress(90);
+            break;
+          case StageName.EXECUTED_IN_TON:
+            //Executed on TVM side
+            //We skip this step as the time is
+            store.setMessage("Finished!");
             store.setProgress(100);
             store.setIsDone(true);
             return true;
-          case "TVMMerkleMessageExecuted":
-            //Executed on TVM side
-            //We skip this step as the time is
-            break;
           default:
             break;
         }
@@ -142,7 +134,7 @@ export function useCCT() {
       store.setMessage("Initializing SDK");
 
       tacSdk = await TacSdk.create({
-        network: Network.Testnet,
+        network: Network.TESTNET,
         TONParams: {
           contractOpener: new TonClient({
             endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
@@ -172,7 +164,7 @@ export function useCCT() {
       store.setProgress(20);
 
       const result = await pollStatus(txLinker);
-      console.log(result);
+      console.log(result)
     } catch (e) {
       console.warn("TX failed with err: " + e);
       if (tacSdk) {
@@ -186,6 +178,8 @@ export function useCCT() {
   }
 
   const refund = async (tonConnectUI: TonConnectUI, tokenAmount: number, proxyAddress: string, jettonAddress: string, decimals: number = 9) => {
+    console.log(tokenAmount, tokenAmount * 10 ** decimals, Math.floor(tokenAmount * 10 ** decimals))
+    console.log(BigInt(Math.floor(tokenAmount * 10 ** decimals)))
     try {
       if (useStore.getState().isRunning) {
         store.setIsSigning(true);
@@ -199,7 +193,7 @@ export function useCCT() {
       store.setMessage("Initializing SDK");
 
       tacSdk = await TacSdk.create({
-        network: Network.Testnet,
+        network: Network.TESTNET,
         TONParams: {
           contractOpener: new TonClient({
             endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
@@ -215,14 +209,14 @@ export function useCCT() {
       const tvmAddress = await tacSdk.getTVMTokenAddress(jettonAddress)
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const encodedArguments = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256)"], [[proxyAddress, BigInt(tokenAmount * 10 ** decimals)]]);
+      const encodedArguments = ethers.AbiCoder.defaultAbiCoder().encode(["tuple(address,uint256)"], [[proxyAddress, BigInt(Math.floor(tokenAmount * 10 ** decimals))]]);
       const evmProxyMsg = {
         evmTargetAddress: proxyAddress,
         methodName: "burn(bytes,bytes)",
         encodedParameters: encodedArguments,
       };
       const sender = await SenderFactory.getSender({tonConnect: tonConnectUI});
-      const assets = [{address: tvmAddress, amount: Number(tokenAmount)}];
+      const assets = [{address: tvmAddress, rawAmount: BigInt(Math.floor(tokenAmount * 10 ** decimals))}];
       const txLinker = await tacSdk.sendCrossChainTransaction(evmProxyMsg, sender, assets);
       tacSdk.closeConnections();
 
@@ -235,7 +229,10 @@ export function useCCT() {
     } catch (e) {
       console.log("TX failed with err: " + e);
       store.setIsFailed(true);
-      store.setMessage('' + e);
+      if (e instanceof UserRejectsError) {
+        store.setMessage('You rejected the transaction');
+      }
+      store.setMessage('Transaction was not send');
     }
 
   }

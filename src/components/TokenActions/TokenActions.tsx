@@ -23,10 +23,10 @@ const validateAmount = (isDrip: boolean, value: number, lowerBound: number, uppe
       status: false,
       message: "No Value"
     };
-  if (value < 0)
+  if (value <= 0)
     return {
       status: false,
-      message: "Negative Value"
+      message: "Amount too low"
     };
   if (isDrip) {
     if (value > tonBalance)
@@ -35,7 +35,6 @@ const validateAmount = (isDrip: boolean, value: number, lowerBound: number, uppe
         message: "Insufficient Funds"
       };
     const amount = (value * tokenValue);
-    console.log(amount)
     if (amount <= lowerBound)
       return {
         status: false,
@@ -209,7 +208,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
           </Grid2>
           <Grid2 size={6} alignItems="left">
             <Typography variant="body2">
-              TON: {tonBalance}
+              TON: {tonBalance.toLocaleString()}
             </Typography>
           </Grid2>
           <Grid2 size={6} alignItems="right">
@@ -219,7 +218,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
                   { jettonBalanceError }
                     <Refresh sx={{fontSize: "16px", cursor: "pointer"}} onClick={() => updateJettonBalance()} />
                 </Typography>) :
-                (<>{isJettonBalanceLoading ? 'Loading...' : jettonBalance}</>)
+                (<>{isJettonBalanceLoading ? 'Loading...' : jettonBalance.toLocaleString(undefined, { notation: 'standard', maximumFractionDigits: card.decimals })}</>)
               }
             </Typography>
           </Grid2>
@@ -268,7 +267,7 @@ export const TokenActions: FC<{ tonBalance: number, updateBalance: () => void, t
                 size="small"
                 variant="outlined"
                 color="secondary"
-                disabled={!isRefundValid || isSigning}
+                disabled={!isRefundValid || isSigning || !isRefundValid}
                 onClick={() => executeRefund()}
               >
                 {isSigning ? "..." : "Refund"}
