@@ -12,7 +12,7 @@
 
 export const data =
   {
-    "tonclientUrl": "https://testnet.toncenter.com/api/v2/jsonRPC?api_key=***REMOVED***",
+    "tonclientUrl": "https://rp-testnet.turin.tac.build/api/v2/jsonRPC",
     "cards": [
       // {
       //   "title": "Teleport Bitcoin",

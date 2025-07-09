@@ -137,8 +137,7 @@ export function useCCT() {
         network: Network.TESTNET,
         TONParams: {
           contractOpener: new TonClient({
-            endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-            apiKey: '***REMOVED***'
+            endpoint: "https://rp-testnet.turin.tac.build/api/v2/jsonRPC",
           })
         }
       });
@@ -196,8 +195,7 @@ export function useCCT() {
         network: Network.TESTNET,
         TONParams: {
           contractOpener: new TonClient({
-            endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-            apiKey: '***REMOVED***'
+            endpoint: "https://rp-testnet.turin.tac.build/api/v2/jsonRPC",
           })
         }
       });
